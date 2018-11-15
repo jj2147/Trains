@@ -35,8 +35,8 @@ firebase.ref().on("child_added", function(snapshot) {
     var snapval = snapshot.val();
     var firstMoment = moment(snapval.firstTrain, "HH:mm");
     var lastMoment = moment(snapval.lastTrain, "HH:mm");
-    var tempMoment = moment();
-    var tempLast = lastMoment;
+    var tempMoment = moment().clone();
+    var tempLast = lastMoment.clone();
         
 
     if(lastMoment.isBefore(firstMoment)){
@@ -46,13 +46,16 @@ firebase.ref().on("child_added", function(snapshot) {
         tempMoment.add(24, "hours");
     }
 
-    var remainder = (tempLast.diff(firstMoment,"minutes")) % snapval.frequency;
+
+    var remainder = (tempLast.diff(firstMoment,"minutes")) % snapval.frequency;    
     tempLast.subtract(remainder, "minutes");
     lastMoment.subtract(remainder, "minutes");
+
 
     var nextArrival = moment();
     if(tempMoment.isAfter(tempLast)){
         nextArrival = firstMoment;
+        nextArrival.add(24,"hours");
     }else{
         nextArrival.add((snapval.frequency - ((tempMoment.diff(firstMoment,"minutes")) % snapval.frequency)) , "minutes");
     }
