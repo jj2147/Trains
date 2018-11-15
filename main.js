@@ -16,6 +16,7 @@ $("#submit-btn").on("click", function(){
         name: $("#train-name").val(),
         destination: $("#destination").val(),
         firstTrain: $("#first-train").val(),
+        lastTrain: $("#last-train").val(),
         frequency: $("#frequency").val(),
     }
     firebase.ref().push(trainObj);
@@ -23,23 +24,62 @@ $("#submit-btn").on("click", function(){
     $("#train-name").empty();
     $("#destination").empty();
     $("#first-train").empty();
+    $("#last-train").empty();
     $("#frequency").empty();
 
 
 })
 
 
-firebase.ref().on("child_added", function(snapshot, prevChildKey) {
+firebase.ref().on("child_added", function(snapshot) {
     var snapval = snapshot.val();
+    var firstMoment = moment(snapval.firstTrain, "HH:mm");
+    var lastMoment = moment(snapval.lastTrain, "HH:mm");
+    var tempMoment = moment();
+    var tempLast = lastMoment;
+        
+
+    if(lastMoment.isBefore(firstMoment)){
+        tempLast.add(24,"hours");
+    }
+    if(moment().isBefore(firstMoment)){
+        tempMoment.add(24, "hours");
+    }
+
+    var remainder = (tempLast.diff(firstMoment,"minutes")) % snapval.frequency;
+    tempLast.subtract(remainder, "minutes");
+    lastMoment.subtract(remainder, "minutes");
+
+    var nextArrival = moment();
+    if(tempMoment.isAfter(tempLast)){
+        nextArrival = firstMoment;
+    }else{
+        nextArrival.add((snapval.frequency - ((tempMoment.diff(firstMoment,"minutes")) % snapval.frequency)) , "minutes");
+    }
+    
+
+
+    var minutesAway = nextArrival.diff(moment(), "minutes");
+    // if(minutesAway < 0){
+    //     minutesAway += 1440;
+    // }
 
     $("#table").find("tbody").append(
+
+        // <th>Train Name</th>
+        // <th>Destination</th>
+        // <th>First Train</th>
+        // <th>Last Train</th>
+        // <th>Frequency (min)</th>
+        // <th>Next Arrival</th>
+        // <th>Minutes Away</th>
+
         "<tr><td>" + snapval.name + 
         "</td><td>" + snapval.destination + 
-        "</td><td>" + snapval.firstTrain +
-        "</td><td>" + snapval.frequency + "</td></tr>"
+        "</td><td>" + firstMoment.format("HH:mm") +
+        "</td><td>" + lastMoment.format("HH:mm") +
+        "</td><td>" + snapval.frequency + 
+        "</td><td>" + nextArrival.format("HH:mm") + 
+        "</td><td>" + minutesAway + "</td></tr>"
     );
-
-    var duration = moment.duration(moment().diff(snapval.firstTrain));
-    console.log(duration);
-    
 });
