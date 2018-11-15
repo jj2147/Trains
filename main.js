@@ -29,14 +29,17 @@ $("#submit-btn").on("click", function(){
 })
 
 
-firebase.ref.on("child_added", function(snapshot, prevChildKey) {
+firebase.ref().on("child_added", function(snapshot, prevChildKey) {
     var snapval = snapshot.val();
 
     $("#table").find("tbody").append(
         "<tr><td>" + snapval.name + 
         "</td><td>" + snapval.destination + 
         "</td><td>" + snapval.firstTrain +
-        "</td><td>" + snapval.frequency
+        "</td><td>" + snapval.frequency + "</td></tr>"
     );
 
+    var duration = moment.duration(moment().diff(snapval.firstTrain));
+    console.log(duration);
+    
 });
